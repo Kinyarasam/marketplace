@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-
 import User from "../models/user";
 import crypto from 'crypto';
-
+import { v4 as uuidv4 } from "uuid";
+import redisClient from "../utils/redis";
 
 class AuthController {
   static getConnect(req, res) {
@@ -31,7 +31,7 @@ class AuthController {
 
     return User
       .findOne({email: email, password: hashedPassword})
-      .then((user, err) => {
+      .then(async (user, err) => {
         if (err) throw new Error(err);
 
         if (!user) return res.status(404).json({ error: 'Not Found' });
@@ -39,11 +39,13 @@ class AuthController {
         /**
          * Generate a token
          */
-        return res.status(200).json({ token: 'Some random number' });
+        const token = uuidv4();
+        const key = `auth_${token}`;
+        await redisClient.set(key, user._id.toString(), 60 * 60 * 24)
+
+        return res.status(200).json({ token: token });
       })
   }
-
-
 }
 
 export default AuthController;

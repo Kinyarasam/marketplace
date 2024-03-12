@@ -20,6 +20,7 @@ class DBClient {
     });
 
     mongoose.connection.on('connected', () => {
+      console.log('[DB] connected')
       this.isConnected = true;
     });
 

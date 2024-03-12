@@ -3,7 +3,7 @@ import express from 'express';
 import router from './routes';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
-// import './config/db';
+import dbClient from "./config/db";
 
 dotenv.config();
 

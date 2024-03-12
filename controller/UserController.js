@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 import crypto from "crypto";
-import dbClient from "../config/db";
 import User from "../models/user";
+import redisClient from "../utils/redis";
 
 class UserController {
   static postNew(req, res) {
@@ -25,7 +25,6 @@ class UserController {
       .findOne({ email: email, password: hashedPassword })
       .then((user, err) => {
         if (err) return res.status(500).json({ error: `Server error: ${err}` });
-        console.log(user)
 
         if (user) {
           return res.status(400).json({ error: 'User already exists' })
@@ -53,7 +52,26 @@ class UserController {
           .catch((err) => { return res.status(401).json({ error: `Unable to save record: ${err}` }) })
       })
       .catch((err) => { return res.status(401).json({ error: `Unable to save record: ${err}` }) })
+  }
 
+  static async getMe(req, res) {
+    const token = req.header('X-Token');
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+    
+    const key = `auth_${token}`;
+    const userId = await redisClient.get(key);
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    return User
+      .findOne({ _id: userId })
+      .then((user) => {
+        if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+        return res.status(200).json({ id: user._id, email: user.email })
+      })
+      .catch((err) => {
+        res.status(401).json({ error: 'Unauthorized' });
+      })
   }
 }
 

@@ -15,5 +15,6 @@ router
 
 router
   .get('/connect', AuthController.getConnect)
+  .get('/users/me', UserController.getMe)
 
 export default router;
