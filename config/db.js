@@ -1,18 +1,17 @@
 #!/usr/bin/env node
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
 /** Load the environment variables */
-dotenv.config()
-
+dotenv.config();
 
 class DBClient {
-  constructor() {
+  constructor () {
     this.isConnected = false;
     this.host = process.env.MONGO_DB_HOST;
     this.port = process.env.MONGO_DB_PORT;
-    this.database = process.env.MONGO_DB_DATABASE ;
-    this.url = process.env.MONGO_URI
+    this.database = process.env.MONGO_DB_DATABASE;
+    this.url = process.env.MONGO_URI;
 
     this.client = mongoose.connect(this.url, {
       useNewUrlParser: true,
@@ -35,12 +34,13 @@ class DBClient {
     });
   }
 
-  async host() {
-    const host = (await this.client).connection.host;
-    return host
+  host () {
+    const host = (this.client).connection.host;
+    console.log('host')
+    return host;
   }
 
-  isAlive() {
+  isAlive () {
     return this.isConnected;
   }
 }

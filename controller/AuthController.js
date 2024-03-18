@@ -1,11 +1,37 @@
 #!/usr/bin/env node
-import User from "../models/user";
+import User from '../models/user';
 import crypto from 'crypto';
-import { v4 as uuidv4 } from "uuid";
-import redisClient from "../utils/redis";
+import { v4 as uuidv4 } from 'uuid';
+import redisClient from '../utils/redis';
 
+/**
+ * @swagger
+ * tags:
+ *   name: Authentication
+ *   description: Operations related to authorization.
+ */
 class AuthController {
-  static getConnect(req, res) {
+  /**
+   * @swagger
+   * /connect:
+   *   get:
+   *     tags:
+   *       - Authentication
+   *     summary: 
+   *       - Authorization
+   *     security:
+   *       - ApiKeyAuth: []
+   *     responses:
+   *       200:
+   *         description: request executed successfully
+   *         schema:
+   *           properties:
+   *             token:
+   *               type: string
+   *       401:
+   *         description: Unauthorized
+   */
+  static getConnect (req, res) {
     const authHeader = req.header('Authorization');
     if (!authHeader) return res.status(401).json({ error: 'Unauthorized' });
 
@@ -14,23 +40,23 @@ class AuthController {
 
     const userData = Buffer.from(userCredentials, 'base64').toString('utf-8');
 
-    let password = undefined;
-    let email = undefined;
+    let password;
+    let email;
 
     try {
-      [email, password] = userData.split(':')
-    } catch(err) {
-      return res.status(401).json({error: 'Unauthorized'});
+      [email, password] = userData.split(':');
+    } catch (err) {
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
     if (!email || !password) return res.status(401).json({ error: 'Unauthorized' });
 
-    const hash = crypto.createHash('sha512')
+    const hash = crypto.createHash('sha512');
     const encryptedPassword = hash.update(password);
     const hashedPassword = encryptedPassword.digest('hex');
 
     return User
-      .findOne({email: email, password: hashedPassword})
+      .findOne({ email, password: hashedPassword })
       .then(async (user, err) => {
         if (err) throw new Error(err);
 
@@ -41,13 +67,29 @@ class AuthController {
          */
         const token = uuidv4();
         const key = `auth_${token}`;
-        await redisClient.set(key, user._id.toString(), 60 * 60 * 24)
+        await redisClient.set(key, user._id.toString(), 60 * 60 * 24);
 
-        return res.status(200).json({ token: token });
-      })
+        return res.status(200).json({ token });
+      });
   }
 
-  static async getDisconnect(req, res) {
+  /**
+   * @swagger
+   * /disconnect:
+   *   get:
+   *     tags:
+   *       - Authentication
+   *     summary: 
+   *       - Log out an active user.
+   *     security:
+   *       - ApiKeyAuth: []
+   *     responses:
+   *       200:
+   *         description: request executed successfully
+   *       401:
+   *         description: Unauthorized
+   */
+  static async getDisconnect (req, res) {
     const token = req.header('X-Token');
     if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
@@ -56,7 +98,7 @@ class AuthController {
     if (!userId) res.status(401).json({ error: 'Unauthorized' });
 
     await redisClient.del(key);
-    return res.status(204).json({})
+    return res.status(204).json({});
   }
 }
 

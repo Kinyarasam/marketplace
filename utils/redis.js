@@ -2,9 +2,8 @@
 import redis from 'redis';
 import util from 'util';
 
-
 class RedisClient {
-  constructor() {
+  constructor () {
     this.client = redis.createClient();
 
     this.client.on('error', (err) => {
@@ -16,23 +15,23 @@ class RedisClient {
     });
   }
 
-  isAlive() {
+  isAlive () {
     return this.client.connected;
   }
 
-  async get(key) {
+  async get (key) {
     const redisGet = util.promisify(this.client.get).bind(this.client);
     const value = await redisGet(key);
-    console.log(value)
+    console.log(value);
     return value;
   }
 
-  set(key, value, time) {
+  set (key, value, time) {
     const redisSet = util.promisify(this.client.setex).bind(this.client);
     return redisSet(key, time, value);
   }
 
-  async del(key) {
+  async del (key) {
     const redisDel = util.promisify(this.client.del).bind(this.client);
     await redisDel(key);
   }

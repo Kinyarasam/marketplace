@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
-  first_name: String,
-  last_name: String,
+  firstName: String,
+  lastName: String,
   email: String,
-  password: String,
+  password: String
 });
 
 const User = mongoose.model('User', userSchema);
